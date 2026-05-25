@@ -25,6 +25,10 @@ export class CustomerRepo implements CustomerRepository {
         max: 1,
         idleTimeoutMillis: 30_000,
         connectionTimeoutMillis: 5_000,
+        // RDS rejects non-encrypted connections by default. Use SSL with
+        // rejectUnauthorized=false (we trust the AWS-managed cert chain
+        // without bundling rds-ca CAs).
+        ssl: { rejectUnauthorized: false },
       });
   }
 
