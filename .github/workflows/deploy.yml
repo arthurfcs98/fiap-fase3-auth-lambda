@@ -1,0 +1,50 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main, homolog]
+
+env:
+  AWS_REGION: us-east-1
+  TF_IN_AUTOMATION: "true"
+
+jobs:
+  deploy:
+    name: Build + Terraform apply
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+          terraform_wrapper: false
+
+      - name: Configure AWS credentials
+        run: |
+          aws configure set aws_access_key_id     "${{ secrets.AWS_ACCESS_KEY_ID }}"     --profile default
+          aws configure set aws_secret_access_key "${{ secrets.AWS_SECRET_ACCESS_KEY }}" --profile default
+          aws configure set aws_session_token     "${{ secrets.AWS_SESSION_TOKEN }}"    --profile default
+          aws configure set region                "${{ env.AWS_REGION }}"               --profile default
+          aws sts get-caller-identity
+
+      - name: Terraform init
+        working-directory: terraform
+        run: terraform init -no-color
+
+      - name: Terraform apply
+        working-directory: terraform
+        run: |
+          ENV="${{ github.ref_name }}"
+          [ "$ENV" = "main" ] && ENV="prod"
+          terraform apply -auto-approve -no-color -input=false \
+            -var="environment=$ENV"
