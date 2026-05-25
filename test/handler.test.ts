@@ -1,8 +1,10 @@
 import type { APIGatewayProxyEventV2 } from 'aws-lambda';
 import jwt from 'jsonwebtoken';
-import { createHandler } from '../src/handler';
+import { createHandler, __resetCache } from '../src/handler';
 import type { LoadedSecrets } from '../src/secrets-loader';
 import type { CustomerRepository } from '../src/customer-repo';
+
+beforeEach(() => __resetCache());
 
 const buildEvent = (body: unknown, headers: Record<string, string> = {}): APIGatewayProxyEventV2 =>
   ({
