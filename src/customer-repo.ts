@@ -28,11 +28,15 @@ export class CustomerRepo implements CustomerRepository {
       });
   }
 
+  /**
+   * Busca cliente pelo CPF. O schema (herdado da Fase 2) usa a coluna
+   * `document` para armazenar CPF/CNPJ, com a discriminação em `document_type`.
+   */
   async findByCpf(cpf: string): Promise<Customer | null> {
     const client: PoolClient = await this.pool.connect();
     try {
       const { rows } = await client.query<Customer>(
-        'SELECT id::text AS id, name FROM customers WHERE cpf = $1 LIMIT 1',
+        "SELECT id::text AS id, name FROM customers WHERE document = $1 AND document_type = 'CPF' LIMIT 1",
         [cpf],
       );
       return rows[0] ?? null;
