@@ -64,11 +64,13 @@ resource "aws_lambda_function" "auth" {
 
   environment {
     variables = {
-      DB_SECRET_ARN     = data.terraform_remote_state.db.outputs.db_secret_arn
-      JWT_SECRET_ARN    = data.terraform_remote_state.db.outputs.jwt_secret_arn
-      TOKEN_TTL_SECONDS = tostring(var.token_ttl_seconds)
-      LOG_LEVEL         = "info"
-      NODE_OPTIONS      = "--enable-source-maps"
+      DB_SECRET_ARN               = data.terraform_remote_state.db.outputs.db_secret_arn
+      JWT_SECRET_ARN              = data.terraform_remote_state.db.outputs.jwt_secret_arn
+      TOKEN_TTL_SECONDS           = tostring(var.token_ttl_seconds)
+      LOG_LEVEL                   = "info"
+      NODE_OPTIONS                = "--enable-source-maps"
+      OTEL_EXPORTER_OTLP_ENDPOINT = try(data.terraform_remote_state.k8s.outputs.otlp_http_endpoint, "")
+      OTEL_SERVICE_NAME           = "fiap-fase3-auth-lambda"
     }
   }
 
